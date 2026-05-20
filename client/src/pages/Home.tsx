@@ -50,7 +50,7 @@ export default function Home() {
   const [isReady, setIsReady] = useState(false);
   const [handCount, setHandCount] = useState(0);
   const [effectModeIndex, setEffectModeIndex] = useState(0);
-  const [sliderValue, setSliderValue] = useState(0.5);
+  const [sliderValue, setSliderValue] = useState(0.05);
   const [flashOpacity, setFlashOpacity] = useState(0);
   const [flashText, setFlashText] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -208,7 +208,7 @@ export default function Home() {
       if (isPinchingNow && !wasPinching && pinchCooldownRef.current <= 0) {
         const nextIdx = (effectModeIndexRef.current + 1) % EFFECT_MODES.length;
         setEffectModeIndex(nextIdx);
-        setSliderValue(0.5);
+        setSliderValue(0.05);
         setFlashText(EFFECT_MODES[nextIdx].label);
         setFlashOpacity(1);
         setTimeout(() => setFlashOpacity(0), 500);
@@ -476,7 +476,7 @@ export default function Home() {
 
   const handleEffectDotClick = (idx: number) => {
     setEffectModeIndex(idx);
-    setSliderValue(0.5);
+    setSliderValue(0.05);
   };
 
   // Main render loop
