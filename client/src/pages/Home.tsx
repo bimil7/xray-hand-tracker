@@ -1,21 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-import InfoModal from '@/components/InfoModal';
-import { Info } from 'lucide-react';
-import * as Effects from '@/lib/effects';
+'use client';
 
-// ============================================================================
-// TYPES & CONSTANTS
-// ============================================================================
+import { useEffect, useRef, useState } from 'react';
+import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import * as Effects from '@/lib/effects';
+import InfoModal from '@/components/InfoModal';
+
+const HAND_CONNECTIONS = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20],
+  [0, 17], [17, 18], [18, 19], [19, 20],
+];
 
 interface Point {
   x: number;
   y: number;
-}
-
-interface Hand {
-  landmarks: Point[];
-  handedness: string;
 }
 
 interface PanelGeometry {
@@ -25,49 +26,39 @@ interface PanelGeometry {
   bottomRight: Point;
 }
 
+interface Hand {
+  landmarks: Point[];
+}
+
 const EFFECT_MODES = [
-  { id: 'xray', label: 'X-RAY', color: '#00ffcc', sliderLabel: 'Edge' },
-  { id: 'thermal', label: 'THERMAL', color: '#ff6600', sliderLabel: 'Heat' },
-  { id: 'matrix', label: 'MATRIX', color: '#00ff41', sliderLabel: 'Density' },
-  { id: 'neon', label: 'NEON', color: '#ff00ff', sliderLabel: 'Glow' },
-  { id: 'particle', label: 'PARTICLE', color: '#ff3366', sliderLabel: 'Size' },
-  { id: 'mosaic', label: 'MOSAIC', color: '#ffaa00', sliderLabel: 'Block' },
-  { id: 'optflow', label: 'OPT FLOW', color: '#00ccff', sliderLabel: 'Sensitivity' },
-  { id: 'timeslice', label: 'TIME SLICE', color: '#cc66ff', sliderLabel: 'Depth' },
-  { id: 'ascii', label: 'ASCII', color: '#88ff88', sliderLabel: 'Size' },
-  { id: 'asciiov', label: 'ASCII OV', color: '#ffffaa', sliderLabel: 'Size' },
-  { id: 'tracking', label: 'TRACKING', color: '#ffffff', sliderLabel: 'Threshold' },
-  { id: 'flower', label: 'FLOWER', color: '#ff8866', sliderLabel: 'Size' },
-  { id: 'glass', label: 'GLASS', color: '#aaddff', sliderLabel: 'Refract' },
+  { id: 'xray', label: 'X-RAY', color: '#00FFCC', sliderLabel: 'Edge Strength' },
+  { id: 'thermal', label: 'THERMAL', color: '#FF6B00', sliderLabel: 'Heat Intensity' },
+  { id: 'matrix', label: 'MATRIX', color: '#00FF00', sliderLabel: 'Rain Speed' },
+  { id: 'neon', label: 'NEON', color: '#FF00FF', sliderLabel: 'Glow Intensity' },
+  { id: 'particle', label: 'PARTICLE', color: '#FFFF00', sliderLabel: 'Block Size' },
+  { id: 'mosaic', label: 'MOSAIC', color: '#00FFFF', sliderLabel: 'Pixel Size' },
+  { id: 'optflow', label: 'OPT FLOW', color: '#FF00AA', sliderLabel: 'Sensitivity' },
+  { id: 'timeslice', label: 'TIME SLICE', color: '#AA00FF', sliderLabel: 'Distortion' },
+  { id: 'ascii', label: 'ASCII', color: '#FFFFFF', sliderLabel: 'Density' },
+  { id: 'asciiov', label: 'ASCII OV', color: '#CCCCCC', sliderLabel: 'Opacity' },
+  { id: 'tracking', label: 'TRACKING', color: '#00FF88', sliderLabel: 'Trail Length' },
+  { id: 'flower', label: 'FLOWER', color: '#FF88FF', sliderLabel: 'Petal Size' },
+  { id: 'glass', label: 'GLASS', color: '#88FFFF', sliderLabel: 'Refraction' },
 ];
-
-const HAND_CONNECTIONS: [number, number][] = [
-  [0, 1], [1, 2], [2, 3], [3, 4],
-  [0, 5], [5, 6], [6, 7], [7, 8],
-  [5, 9], [9, 10], [10, 11], [11, 12],
-  [9, 13], [13, 14], [14, 15], [15, 16],
-  [13, 17], [17, 18], [18, 19], [19, 20],
-  [0, 17],
-];
-
-// ============================================================================
-// HOME COMPONENT
-// ============================================================================
 
 export default function Home() {
   const [isReady, setIsReady] = useState(false);
+  const [handCount, setHandCount] = useState(0);
   const [effectModeIndex, setEffectModeIndex] = useState(0);
   const [sliderValue, setSliderValue] = useState(0.5);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [handCount, setHandCount] = useState(0);
-  const [flashText, setFlashText] = useState('');
   const [flashOpacity, setFlashOpacity] = useState(0);
+  const [flashText, setFlashText] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
-  // Refs for mutable state (no re-renders)
-  const videoRef = useRef<HTMLVideoElement>(null);
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const fxCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handLandmarkerRef = useRef<HandLandmarker | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -106,76 +97,51 @@ export default function Home() {
       try {
         // Initialize MediaPipe
         const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
         );
-
-        const handLandmarker = await HandLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-            delegate: 'GPU',
-          },
+        const landmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task' },
           runningMode: 'VIDEO',
           numHands: 2,
         });
+        handLandmarkerRef.current = landmarker;
 
-        handLandmarkerRef.current = handLandmarker;
-
-        // Request camera
+        // Setup webcam
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         });
-
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => {
             videoRef.current?.play();
             setIsReady(true);
-            startRenderLoop();
           };
         }
       } catch (error) {
-        console.error('Initialization failed:', error);
+        console.error('Initialization error:', error);
       }
     };
 
     initializeApp();
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
-  const lerpPoint = (a: Point, b: Point, t: number): Point => ({
-    x: a.x + (b.x - a.x) * t,
-    y: a.y + (b.y - a.y) * t,
-  });
-
-  const lerpPanel = (a: PanelGeometry, b: PanelGeometry, t: number): PanelGeometry => ({
-    topLeft: lerpPoint(a.topLeft, b.topLeft, t),
-    topRight: lerpPoint(a.topRight, b.topRight, t),
-    bottomLeft: lerpPoint(a.bottomLeft, b.bottomLeft, t),
-    bottomRight: lerpPoint(a.bottomRight, b.bottomRight, t),
+  const lerpPanel = (from: PanelGeometry, to: PanelGeometry, factor: number): PanelGeometry => ({
+    topLeft: { x: from.topLeft.x + (to.topLeft.x - from.topLeft.x) * factor, y: from.topLeft.y + (to.topLeft.y - from.topLeft.y) * factor },
+    topRight: { x: from.topRight.x + (to.topRight.x - from.topRight.x) * factor, y: from.topRight.y + (to.topRight.y - from.topRight.y) * factor },
+    bottomLeft: { x: from.bottomLeft.x + (to.bottomLeft.x - from.bottomLeft.x) * factor, y: from.bottomLeft.y + (to.bottomLeft.y - from.bottomLeft.y) * factor },
+    bottomRight: { x: from.bottomRight.x + (to.bottomRight.x - from.bottomRight.x) * factor, y: from.bottomRight.y + (to.bottomRight.y - from.bottomRight.y) * factor },
   });
 
   const processHandLandmarks = (results: any) => {
-    const hands: Hand[] = [];
-
-    if (results.landmarks) {
-      for (let i = 0; i < results.landmarks.length; i++) {
-        const landmarks = results.landmarks[i].map((lm: any) => ({
-          x: lm.x,
-          y: lm.y,
-        }));
-
-        hands.push({
-          landmarks,
-          handedness: results.handedness?.[i]?.displayName || 'Unknown',
-        });
-      }
-    }
+    const hands: Hand[] = results.landmarks.map((landmarks: any[]) => ({
+      landmarks: landmarks.map((lm: any) => ({ x: lm.x, y: lm.y })),
+    }));
 
     handsRef.current = hands;
     setHandCount(hands.length);
@@ -344,17 +310,11 @@ export default function Home() {
         Effects.applyMosaicEffect(data, scaledWidth, scaledHeight, paramValue);
         break;
       case 'optflow':
-        prevFrameDataRef.current = Effects.applyOptFlowEffect(
-          data,
-          scaledWidth,
-          scaledHeight,
-          paramValue,
-          prevFrameDataRef.current
-        );
+        Effects.applyOpticalFlowEffect(data, scaledWidth, scaledHeight, paramValue, prevFrameDataRef.current);
+        prevFrameDataRef.current = new Uint8ClampedArray(data);
         break;
       case 'timeslice':
-        timeSliceBufferRef.current.push(new Uint8ClampedArray(data));
-        if (timeSliceBufferRef.current.length > 20) {
+        if (timeSliceBufferRef.current.length >= 20) {
           timeSliceBufferRef.current.shift();
         }
         Effects.applyTimeSliceEffect(data, scaledWidth, scaledHeight, paramValue, timeSliceBufferRef.current);
@@ -452,20 +412,17 @@ export default function Home() {
     panel: PanelGeometry,
     width: number,
     height: number,
-    effectColor: string
+    color: string
   ) => {
     const { topLeft, topRight, bottomLeft, bottomRight } = panel;
-
     const p1 = { x: topLeft.x * width, y: topLeft.y * height };
     const p2 = { x: topRight.x * width, y: topRight.y * height };
     const p3 = { x: bottomRight.x * width, y: bottomRight.y * height };
     const p4 = { x: bottomLeft.x * width, y: bottomLeft.y * height };
 
-    // Outer glow
-    ctx.shadowColor = effectColor;
-    ctx.shadowBlur = 20;
-    ctx.strokeStyle = effectColor;
-    ctx.lineWidth = 3;
+    // Glow effect
+    ctx.strokeStyle = `${color}40`;
+    ctx.lineWidth = 8;
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
@@ -474,9 +431,8 @@ export default function Home() {
     ctx.closePath();
     ctx.stroke();
 
-    // Inner border
-    ctx.shadowColor = 'transparent';
-    ctx.strokeStyle = effectColor;
+    // Main border
+    ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
@@ -490,7 +446,7 @@ export default function Home() {
     const cornerLength = 12;
     const corners = [p1, p2, p3, p4];
     corners.forEach((corner, idx) => {
-      ctx.strokeStyle = effectColor;
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
       if (idx === 0) {
@@ -508,7 +464,7 @@ export default function Home() {
         ctx.lineTo(corner.x - cornerLength, corner.y);
         ctx.moveTo(corner.x, corner.y);
         ctx.lineTo(corner.x, corner.y - cornerLength);
-      } else {
+      } else if (idx === 3) {
         ctx.moveTo(corner.x, corner.y);
         ctx.lineTo(corner.x + cornerLength, corner.y);
         ctx.moveTo(corner.x, corner.y);
@@ -518,24 +474,23 @@ export default function Home() {
     });
   };
 
-  const startRenderLoop = () => {
+  const handleEffectDotClick = (idx: number) => {
+    setEffectModeIndex(idx);
+    setSliderValue(0.5);
+  };
+
+  // Main render loop
+  useEffect(() => {
+    if (!isReady) return;
+
+    const video = videoRef.current;
+    const bgCanvas = bgCanvasRef.current;
+    const fxCanvas = fxCanvasRef.current;
+    const overlayCanvas = overlayCanvasRef.current;
+
+    if (!video || !bgCanvas || !fxCanvas || !overlayCanvas) return;
+
     const render = () => {
-      if (!videoRef.current || !bgCanvasRef.current || !fxCanvasRef.current || !overlayCanvasRef.current) {
-        animationFrameRef.current = requestAnimationFrame(render);
-        return;
-      }
-
-      const video = videoRef.current;
-      const bgCanvas = bgCanvasRef.current;
-      const fxCanvas = fxCanvasRef.current;
-      const overlayCanvas = overlayCanvasRef.current;
-
-      // Guard checks
-      if (video.readyState < video.HAVE_ENOUGH_DATA || video.videoWidth <= 0 || video.videoHeight <= 0) {
-        animationFrameRef.current = requestAnimationFrame(render);
-        return;
-      }
-
       const width = video.videoWidth;
       const height = video.videoHeight;
 
@@ -629,24 +584,24 @@ export default function Home() {
     };
 
     animationFrameRef.current = requestAnimationFrame(render);
-  };
 
-  const handleEffectDotClick = (index: number) => {
-    setEffectModeIndex(index);
-    setSliderValue(0.5);
-  };
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isReady, effectModeIndex, sliderValue, handCount, flashOpacity, flashText]);
 
   return (
-    <div className="w-full h-screen bg-black overflow-hidden relative">
+    <div className="relative w-full h-screen bg-black overflow-hidden">
       {/* Hidden video element */}
       <video
         ref={videoRef}
-        autoPlay
+        className="hidden"
         playsInline
-        className="w-0 h-0 opacity-0"
       />
 
-      {/* Canvas stack */}
+      {/* Canvas layers */}
       <canvas
         ref={bgCanvasRef}
         className="absolute inset-0 w-full h-full object-cover"
@@ -700,14 +655,10 @@ export default function Home() {
             <input
               type="range"
               min="0"
-              max="1"
-              step="0.01"
-              value={sliderValue}
-              onChange={(e) => setSliderValue(parseFloat(e.target.value))}
-              className="w-32 h-1 rounded appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, ${EFFECT_MODES[effectModeIndex].color}40, ${EFFECT_MODES[effectModeIndex].color})`,
-              }}
+              max="100"
+              value={Math.round(sliderValue * 100)}
+              onChange={(e) => setSliderValue(Number(e.target.value) / 100)}
+              className="w-48 cursor-pointer"
             />
           </div>
         </div>
@@ -717,9 +668,9 @@ export default function Home() {
       {isReady && (
         <button
           onClick={() => setShowInfoModal(true)}
-          className="absolute bottom-6 right-6 z-10 w-12 h-12 rounded-full bg-white bg-opacity-10 hover:bg-opacity-20 transition-all flex items-center justify-center border border-gray-600"
+          className="absolute bottom-6 right-6 z-10 w-10 h-10 rounded-full bg-cyan-500 bg-opacity-20 border border-cyan-500 flex items-center justify-center hover:bg-opacity-40 transition-all"
         >
-          <Info size={20} className="text-white" />
+          <span className="text-cyan-500 font-bold">?</span>
         </button>
       )}
 
