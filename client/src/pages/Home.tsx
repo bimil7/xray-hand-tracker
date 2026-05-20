@@ -351,26 +351,29 @@ export default function Home() {
         break;
       case 'ascii':
         Effects.renderASCIIEffect(offCtx, data, scaledWidth, scaledHeight, paramValue);
-        offCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+        // Skip putImageData for ASCII - rendering functions draw directly to canvas
         break;
       case 'asciiov':
         Effects.renderASCIIOVEffect(offCtx, data, scaledWidth, scaledHeight, paramValue);
-        offCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+        // Skip putImageData for ASCII OV - rendering functions draw directly to canvas
         break;
       case 'tracking':
         Effects.renderTrackingEffect(offCtx, data, scaledWidth, scaledHeight, paramValue);
-        offCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+        // Skip putImageData for Tracking - rendering functions draw directly to canvas
         break;
       case 'flower':
         Effects.renderFlowerEffect(offCtx, data, scaledWidth, scaledHeight, paramValue);
-        offCtx.getImageData(0, 0, scaledWidth, scaledHeight);
+        // Skip putImageData for Flower - rendering functions draw directly to canvas
         break;
       case 'glass':
         Effects.applyGlassEffect(data, scaledWidth, scaledHeight, paramValue);
         break;
     }
 
-    offCtx.putImageData(imageData, 0, 0);
+    // Only putImageData for pixel-manipulation effects (not for rendering effects that draw directly)
+    if (!['ascii', 'asciiov', 'tracking', 'flower'].includes(effectId)) {
+      offCtx.putImageData(imageData, 0, 0);
+    }
 
     // Clip to panel shape and draw
     fxCtx.save();
@@ -382,7 +385,8 @@ export default function Home() {
     fxCtx.closePath();
     fxCtx.clip();
 
-    fxCtx.drawImage(offscreenCanvas, srcX, srcY, regionWidth, regionHeight, srcX, srcY, regionWidth, regionHeight);
+    // Draw from offscreen canvas (0,0 to scaledWidth,scaledHeight) to the panel region in fxCtx
+    fxCtx.drawImage(offscreenCanvas, 0, 0, scaledWidth, scaledHeight, srcX, srcY, regionWidth, regionHeight);
     fxCtx.restore();
   };
 

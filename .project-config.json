@@ -1,0 +1,37 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [],
+  "dev_command": "pnpm run dev",
+  "env_vars": {},
+  "experiments": [
+    "no_db_push"
+  ],
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663630819762/Ju95kqKvM5zSEbh3tMzkZ8",
+    "access_key_id": "ASIAZV3A2ECZLDUYO44E",
+    "secret_access_key": "HdKCQCNONct5eGkYsHFPACgI8HGZqJDzzDOLn0hG",
+    "session_token": "IQoJb3JpZ2luX2VjECkaCXVzLWVhc3QtMSJIMEYCIQDe4pVXmWO+wASZ2KKmj27u83VqDmV5Wzt98grhxF2mNgIhAMneP4IFJgQoaFUYk+f/ntgyIjqiE0N+qs7IjBVRWUdTKv8DCPL//////////wEQBBoMNjY1Mzg2MDk4ODY2IgzBXik7yuduiWd9ZLkq0wOQZRNeIIwVC7E3R/o5Qxw8Tkejnwxll09T39ElzKmkfao740frNGwCYpBgrFsJIDnv45uuLeQ0L2G0M1ojdEC8LXyQ4g7+wDVVqNHRXllxQByRe8cYKk5BNeo/Bh/g3C9dsZgliqY+hhUeumc2n7AHnwbJLa1R61FFlErVGnUe6zFjaP9J9nEEkdohdwgLs2vIiI1ZMFHjZ2UfpnfEa4AwPbSxlKhKKnK/vYfLorAWADEa/NQj3Dcm83S9rtLf6viO6UwYIcbWsQxqxt6O/Qt021d7ui48gkpPSUfidnGhOWzWcr7hiJnY/WOr/JsFTWn3ZqgBDwSaNDyMMuT3TtosgnVHHxTsxpGX4d90u3cXkV5/MHaD2x3T+ppw/y5V8lRMcOQcrTxZKMXQHjCiZ/BRcMQme76Rk7bD8iix0T14xCghx34U8B3pJFGZOMKXJTNsFjn1j+rHxtyCd4+Jb2B0F5UL/gxeetN0Sr0UJqe+z6vmq/+8xiZJZauiyyFDBOuuciSxckxsZVmaCtZcsvxqpwr/YC9614FOos+69U8Fu7918edTqQx1t6E/CtlS4mxs2mdxnjpGUVgeP6iCa0QFmM93aMvlKg9ItXUrQzoY6ftkkTDZ0bfQBjqcAdkw5bToUDj+rKwx6PAtHRGqu8oT1+HfrDoRcbjT2pCuIX5D6CCmgYbhhvh4W1mw/SoI9IYrJVZQkvTgRhB7b+0fTcumxCiTxdXjyiBGRTlufptG9XeUp7wyQvlF6NlupucKGjQt+RC+t3pf02H0+rcScq+hlMY0NI5lQkN+1887Nl50gDLYwh/f+petkzpTZwyO55zyk4GwFqkTcw==",
+    "expiration": "2026-05-21T05:01:13.000Z"
+  },
+  "name": "xray-hand-tracker",
+  "path": "/home/ubuntu/xray-hand-tracker",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "6LFJ8wdAeAABrsZQWtUUn2",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "QwSbeFBTJud6UPp3Y9ft6Y",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Bimil V Joseph",
+    "OWNER_OPEN_ID": "hkPCBCEJkxeNpprmfVUxQA",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "e7002aad-f8d6-46d9-9d4c-aab98ceba40f",
+    "VITE_APP_ID": "Ju95kqKvM5zSEbh3tMzkZ8",
+    "VITE_APP_LOGO": "https://files.manuscdn.com/user_upload_by_module/web_dev_logo/310519663630819762/vNbnMaROZLFlcSAd.png",
+    "VITE_APP_TITLE": "X-Ray Hand Tracker",
+    "VITE_FRONTEND_FORGE_API_KEY": "Fj5NRVw2ZWu6jwuzyoXsza",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-static",
+  "test_command": "pnpm test"
+}
