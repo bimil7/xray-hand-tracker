@@ -217,10 +217,10 @@ export default function Home() {
 
         const stripHeight = 0.15;
         panelRef.current = {
-          topLeft: { x: leftCenter.x, y: leftCenter.y - stripHeight / 2 },
-          topRight: { x: rightCenter.x, y: rightCenter.y - stripHeight / 2 },
-          bottomLeft: { x: leftCenter.x, y: leftCenter.y + stripHeight / 2 },
-          bottomRight: { x: rightCenter.x, y: rightCenter.y + stripHeight / 2 },
+          topLeft: { x: 1 - leftCenter.x, y: leftCenter.y - stripHeight / 2 },
+          topRight: { x: 1 - rightCenter.x, y: rightCenter.y - stripHeight / 2 },
+          bottomLeft: { x: 1 - leftCenter.x, y: leftCenter.y + stripHeight / 2 },
+          bottomRight: { x: 1 - rightCenter.x, y: rightCenter.y + stripHeight / 2 },
         };
       } else {
         // Open panel
@@ -228,10 +228,10 @@ export default function Home() {
         const botY = Math.max(leftIndex.y, leftThumb.y, rightIndex.y, rightThumb.y);
 
         panelRef.current = {
-          topLeft: { x: leftIndex.x, y: topY },
-          topRight: { x: rightIndex.x, y: topY },
-          bottomLeft: { x: leftIndex.x, y: botY },
-          bottomRight: { x: rightIndex.x, y: botY },
+          topLeft: { x: 1 - leftIndex.x, y: topY },
+          topRight: { x: 1 - rightIndex.x, y: topY },
+          bottomLeft: { x: 1 - leftIndex.x, y: botY },
+          bottomRight: { x: 1 - rightIndex.x, y: botY },
         };
       }
 
