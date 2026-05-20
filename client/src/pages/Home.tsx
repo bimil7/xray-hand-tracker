@@ -92,6 +92,13 @@ export default function Home() {
   const lastPinchStateRef = useRef({ left: false, right: false });
   const prevFrameDataRef = useRef<Uint8ClampedArray | null>(null);
   const timeSliceBufferRef = useRef<Uint8ClampedArray[]>([]);
+  const effectModeIndexRef = useRef(0);
+  const lastFrameTimeRef = useRef(Date.now());
+
+  // Sync effectModeIndex to ref whenever it changes
+  useEffect(() => {
+    effectModeIndexRef.current = effectModeIndex;
+  }, [effectModeIndex]);
 
   // Initialize MediaPipe and webcam
   useEffect(() => {
@@ -233,7 +240,7 @@ export default function Home() {
       const isPinchingNow = leftPinching || rightPinching;
 
       if (isPinchingNow && !wasPinching && pinchCooldownRef.current <= 0) {
-        const nextIdx = (effectModeIndex + 1) % EFFECT_MODES.length;
+        const nextIdx = (effectModeIndexRef.current + 1) % EFFECT_MODES.length;
         setEffectModeIndex(nextIdx);
         setSliderValue(0.5);
         setFlashText(EFFECT_MODES[nextIdx].label);
@@ -243,6 +250,9 @@ export default function Home() {
       }
 
       lastPinchStateRef.current = { left: leftPinching, right: rightPinching };
+    } else {
+      // Reset pinch state when hands leave frame
+      lastPinchStateRef.current = { left: false, right: false };
     }
   };
 
@@ -559,9 +569,14 @@ export default function Home() {
         }
       }
 
-      // Update cooldown
+      // Update cooldown based on actual frame delta time
+      const now = Date.now();
+      const deltaMs = now - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = now;
+      const deltaSec = deltaMs / 1000;
+      
       if (pinchCooldownRef.current > 0) {
-        pinchCooldownRef.current -= 0.016; // ~60fps
+        pinchCooldownRef.current = Math.max(0, pinchCooldownRef.current - deltaSec);
       }
 
       // Apply smoothing to panel
