@@ -310,7 +310,7 @@ export default function Home() {
         Effects.applyMosaicEffect(data, scaledWidth, scaledHeight, paramValue);
         break;
       case 'optflow':
-        Effects.applyOpticalFlowEffect(data, scaledWidth, scaledHeight, paramValue, prevFrameDataRef.current);
+        Effects.applyOptFlowEffect(data, scaledWidth, scaledHeight, paramValue, prevFrameDataRef.current);
         prevFrameDataRef.current = new Uint8ClampedArray(data);
         break;
       case 'timeslice':
